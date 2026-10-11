@@ -1,0 +1,11 @@
+{
+  "method": "tools/call",
+  "params": {
+    "name": "search_omnis_docs",
+    "arguments": {
+      "query": "\"reversible block\" OR \"Begin reversible\"",
+      "mode": "fulltext",
+      "top_k": 5
+    }
+  }
+}

@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+.claude/
+
+# MacOS
+.DS_Store
+
+
+# Omnis documentation and everything generated from it must never be committed
+Omnis PDF/*
+!Omnis PDF/README.md
+output/*
+!output/README.md
+*.pdf
+.env.*
+!.env.example
+!.env.local.example

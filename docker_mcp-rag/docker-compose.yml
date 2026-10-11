@@ -1,0 +1,50 @@
+services:
+
+  rag-server:
+    build: ./rag-server
+    restart: unless-stopped
+    ports:
+      - "${RAG_BIND_HOST:-0.0.0.0}:${RAG_PORT:-7071}:7071"
+    environment:
+      - RAG_DB_HOST=${RAG_DB_HOST:-host.docker.internal}
+      - RAG_DB_PORT=${RAG_DB_PORT:-5432}
+      - RAG_DB_NAME=${RAG_DB_NAME:-ragdb}
+      - RAG_DB_USER=${RAG_DB_USER:?RAG_DB_USER is required}
+      - RAG_DB_PASS=${RAG_DB_PASS:?RAG_DB_PASS is required}
+      - EMBED_MODEL=${EMBED_MODEL:-BAAI/bge-m3}
+      - PORT=7071
+      - STRICT_PORT=false
+      - RAG_W_DENSE=${RAG_W_DENSE:-1.0}
+      - RAG_W_FTS=${RAG_W_FTS:-0.3}
+      - RAG_RRF_K=${RAG_RRF_K:-60}
+    volumes:
+      # Persist the downloaded HuggingFace model across restarts (~1.1 GB for bge-m3).
+      # Remove this volume to force a fresh model download.
+      - hf_cache:/root/.cache/huggingface
+    extra_hosts:
+      # Makes host.docker.internal resolve to the host machine on all platforms
+      # (Linux, Windows, macOS). Required to reach PostgreSQL on the host.
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:7071/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s   # model load can take minutes on a busy CPU
+
+  mcp-server:
+    build: ./mcp-server
+    restart: unless-stopped
+    ports:
+      - "${MCP_BIND_HOST:-0.0.0.0}:${MCP_PORT:-3000}:3000"
+    environment:
+      - RAG_SERVER_URL=http://rag-server:7071
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=3000
+    depends_on:
+      rag-server:
+        condition: service_healthy
+
+volumes:
+  hf_cache:
