@@ -57,7 +57,7 @@ your files.
 | `scripts/extract.py`, `REFERENCE_SUBSECTIONS` | Sub-headings "Syntax", "Description", "Options", "Example", … | Same labels in your PDF? |
 | `scripts/extract.py`, `LigatureRepair` | Only the ligature characters "fi" and "fl" | Other broken ligatures ("ff", "ffi")? Other languages? |
 | `scripts/extract.py`, `document_revision` | Revision printed on the first pages as `Revision NNNNN` | Is it found? |
-| `scripts/validate.py` | CommandRef bookmarks at level 3; FunctionRef entries = number of "Function group" labels − 1; chapters numbered consecutively; `LIGATURE_DAMAGE` is a **fixed word list**; `CODE_TITLE` regex; `MAX_CHUNK_WORDS = 600` | These checks pass for the wrong reasons when your PDF has no bookmarks or other damaged words |
+| `scripts/validate.py` | Counts entries but does not check where the last entry ends (P12); CommandRef bookmarks at level 3; FunctionRef entries = number of "Function group" labels − 1; chapters numbered consecutively; `LIGATURE_DAMAGE` is a **fixed word list**; `CODE_TITLE` regex; `MAX_CHUNK_WORDS = 600` | These checks pass for the wrong reasons when your PDF has no bookmarks or other damaged words |
 | `scripts/chunk.py` | `MAX_WORDS = 450`; the strings `"omnis_version": "11.1"` and "Not listed in the Omnis 11.1 help" are hard-coded; doc pack field names (see `Building_from_Omnis_Docs_en.md`) | Replace the version strings if you use another help version |
 | `scripts/eval_queries.json` | Example questions with expected hits (regular expressions) | Replace with questions of your developers; the examples reflect one documentation set |
 
@@ -82,6 +82,7 @@ For each problem: what you see, why it happens, how to check. Use counts and sam
 | P9 | **Oversized or empty chunks.** | Distribution of word counts per corpus; the largest 10 and smallest 10 chunks read by a human |
 | P10 | **Tables split across pages** lose their header or merge with the following text. | Find chunks containing `|` rows without a header line |
 | P11 | **Wrong version mix.** PDF and help describe different Omnis versions. | The informational part of `validate.py` lists entries that exist on one side only. A long list means different versions. Say which entries are affected |
+| P12 | **The last entry swallows what follows it.** Material behind the final entry (appendices, group lists, unrelated chapters) is attached to it, because nothing marks where the entry ends. The author's build showed this for the last function of FunctionRef: its chunks (two parts) contained function group lists and the FileOps worker chapter. Searches then return that chunk for unrelated terms, under the wrong title. `validate.py` only counts entries and does not notice. | Read the **last entry of every reference** (and the last section of the manual) in full, and compare its page range and text with the PDF. Flag chunks whose text is much longer than the entries around them, whose page range spans several pages, or that contain lists of many unrelated names. Search for a term that belongs to the appendix and see under which title it is found |
 
 ### 3.2 HTML help and the doc pack
 
@@ -117,10 +118,10 @@ samples that you compared by hand.
    Note the doc pack path and its catalog counts (or that none is used).
 2. **Fit check.** Go through the table in section 2 and report for each row whether it fits your
    files. Do this *before* the first run.
-3. **extract.** Run `python scripts/extract.py`. Read the warnings it prints. Apply P1–P8 to
+3. **extract.** Run `python scripts/extract.py`. Read the warnings it prints. Apply P1–P8 and P12 to
    `output/extracted/*.json` and the `output/*_extracted.md` files.
 4. **chunk.** Run `python scripts/chunk.py`. Confirm that the first output line reports the doc pack
-   you intended. Apply P9–P11 and H1–H8.
+   you intended. Apply P9–P12 and H1–H8.
 5. **validate.** Run `python scripts/validate.py`. Report which checks passed *and which could not
    fail for your input* (for example the bookmark check without bookmarks).
 6. **Hand comparison.** Pick 10 PDF entries and (with a pack) 5 notation pages, spread over the
